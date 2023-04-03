@@ -20,10 +20,10 @@ import {
   useUpdateStore,
   useAccessStore,
 } from "../store";
-import { Avatar, PromptHints } from "./home";
+import { Avatar } from "./chat";
 
 import Locale, { AllLangs, changeLang, getLang } from "../locales";
-import { getCurrentCommitId } from "../utils";
+import { getCurrentVersion } from "../utils";
 import Link from "next/link";
 import { UPDATE_URL } from "../constant";
 import { SearchService, usePromptStore } from "../store/prompt";
@@ -49,18 +49,18 @@ function SettingItem(props: {
 
 export function Settings(props: { closeSettings: () => void }) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [config, updateConfig, resetConfig, clearAllData] = useChatStore(
-    (state) => [
+  const [config, updateConfig, resetConfig, clearAllData, clearSessions] =
+    useChatStore((state) => [
       state.config,
       state.updateConfig,
       state.resetConfig,
       state.clearAllData,
-    ],
-  );
+      state.clearSessions,
+    ]);
 
   const updateStore = useUpdateStore();
   const [checkingUpdate, setCheckingUpdate] = useState(false);
-  const currentId = getCurrentCommitId();
+  const currentId = getCurrentVersion();
   const remoteId = updateStore.remoteId;
   const hasNewVersion = currentId !== remoteId;
 
@@ -72,7 +72,6 @@ export function Settings(props: { closeSettings: () => void }) {
   }
 
   const [usage, setUsage] = useState<{
-    granted?: number;
     used?: number;
   }>();
   const [loadingUsage, setLoadingUsage] = useState(false);
@@ -81,8 +80,7 @@ export function Settings(props: { closeSettings: () => void }) {
     requestUsage()
       .then((res) =>
         setUsage({
-          granted: res?.total_granted,
-          used: res?.total_used,
+          used: res,
         }),
       )
       .finally(() => {
@@ -120,7 +118,7 @@ export function Settings(props: { closeSettings: () => void }) {
           <div className={styles["window-action-button"]}>
             <IconButton
               icon={<ClearIcon />}
-              onClick={clearAllData}
+              onClick={clearSessions}
               bordered
               title={Locale.Settings.Actions.ClearAll}
             />
@@ -267,19 +265,30 @@ export function Settings(props: { closeSettings: () => void }) {
             ></input>
           </SettingItem>
 
-          <div className="no-mobile">
-            <SettingItem title={Locale.Settings.TightBorder}>
-              <input
-                type="checkbox"
-                checked={config.tightBorder}
-                onChange={(e) =>
-                  updateConfig(
-                    (config) => (config.tightBorder = e.currentTarget.checked),
-                  )
-                }
-              ></input>
-            </SettingItem>
-          </div>
+          <SettingItem title={Locale.Settings.TightBorder}>
+            <input
+              type="checkbox"
+              checked={config.tightBorder}
+              onChange={(e) =>
+                updateConfig(
+                  (config) => (config.tightBorder = e.currentTarget.checked),
+                )
+              }
+            ></input>
+          </SettingItem>
+
+          <SettingItem title={Locale.Settings.SendPreviewBubble}>
+            <input
+              type="checkbox"
+              checked={config.sendPreviewBubble}
+              onChange={(e) =>
+                updateConfig(
+                  (config) =>
+                    (config.sendPreviewBubble = e.currentTarget.checked),
+                )
+              }
+            ></input>
+          </SettingItem>
         </List>
         <List>
           <SettingItem
@@ -350,10 +359,7 @@ export function Settings(props: { closeSettings: () => void }) {
             subTitle={
               loadingUsage
                 ? Locale.Settings.Usage.IsChecking
-                : Locale.Settings.Usage.SubTitle(
-                    usage?.granted ?? "[?]",
-                    usage?.used ?? "[?]",
-                  )
+                : Locale.Settings.Usage.SubTitle(usage?.used ?? "[?]")
             }
           >
             {loadingUsage ? (
@@ -375,7 +381,7 @@ export function Settings(props: { closeSettings: () => void }) {
               type="range"
               title={config.historyMessageCount.toString()}
               value={config.historyMessageCount}
-              min="2"
+              min="0"
               max="25"
               step="2"
               onChange={(e) =>
