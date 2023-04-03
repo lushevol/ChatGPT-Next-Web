@@ -17,6 +17,8 @@ const cn = {
       Copy: "复制",
       Stop: "停止",
       Retry: "重试",
+      Read: "朗读",
+      StopRead: "停止朗读",
     },
     Rename: "重命名对话",
     Typing: "正在输入…",
@@ -78,6 +80,12 @@ const cn = {
     Theme: "主题",
     TightBorder: "紧凑边框",
     SendPreviewBubble: "发送预览气泡",
+    TTS: {
+      Title: "TTS",
+      SubTitle: "聊天内容自动朗读",
+      Voice: "音轨",
+      AutoRead: "自动朗读",
+    },
     Prompt: {
       Disable: {
         Title: "禁用提示词自动补全",

@@ -19,6 +19,8 @@ const en: LocaleType = {
       Copy: "Copy",
       Stop: "Stop",
       Retry: "Retry",
+      Read: "Read",
+      StopRead: "Stop Reading",
     },
     Rename: "Rename Chat",
     Typing: "Typing…",
@@ -79,6 +81,12 @@ const en: LocaleType = {
     Theme: "Theme",
     TightBorder: "Tight Border",
     SendPreviewBubble: "Send Preview Bubble",
+    TTS: {
+      Title: "TTS",
+      SubTitle: "Text to Speech",
+      Voice: "Voice",
+      AutoRead: "Auto Read",
+    },
     Prompt: {
       Disable: {
         Title: "Disable auto-completion",

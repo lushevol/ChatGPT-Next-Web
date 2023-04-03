@@ -420,6 +420,14 @@ export function Chat(props: {
 
   const config = useChatStore((state) => state.config);
 
+  const onReadMessage = (message: Message) => {
+    if (!config.tts.enable) return;
+    const content = message.content;
+    const utterance = new SpeechSynthesisUtterance(content);
+    utterance.voice = config.tts.voice as SpeechSynthesisVoice;
+    window.speechSynthesis.speak(utterance);
+  };
+
   const context: RenderMessage[] = session.context.slice();
 
   if (
@@ -556,6 +564,14 @@ export function Chat(props: {
                   {!isUser &&
                     !(message.preview || message.content.length === 0) && (
                       <div className={styles["chat-message-top-actions"]}>
+                        {!message.streaming && config.tts.enable && (
+                          <div
+                            className={styles["chat-message-top-action"]}
+                            onClick={() => onReadMessage(message)}
+                          >
+                            {Locale.Chat.Actions.Read}
+                          </div>
+                        )}
                         {message.streaming ? (
                           <div
                             className={styles["chat-message-top-action"]}

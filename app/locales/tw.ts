@@ -18,6 +18,8 @@ const tw: LocaleType = {
       Copy: "複製",
       Stop: "停止",
       Retry: "重試",
+      Read: "朗讀",
+      StopRead: "停止朗讀",
     },
     Rename: "重命名對話",
     Typing: "正在輸入…",
@@ -78,6 +80,12 @@ const tw: LocaleType = {
     Theme: "主題",
     TightBorder: "緊湊邊框",
     SendPreviewBubble: "發送預覽氣泡",
+    TTS: {
+      Title: "TTS",
+      SubTitle: "文字轉語音",
+      Voice: "語音",
+      AutoRead: "自動播放",
+    },
     Prompt: {
       Disable: {
         Title: "停用提示詞自動補全",

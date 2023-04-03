@@ -289,6 +289,60 @@ export function Settings(props: { closeSettings: () => void }) {
               }
             ></input>
           </SettingItem>
+
+          <SettingItem title={Locale.Settings.TTS.Title}>
+            <input
+              type="checkbox"
+              checked={config.tts.enable}
+              onChange={(e) =>
+                updateConfig((config) => {
+                  config.tts.enable = e.currentTarget.checked;
+                  if (config.tts.enable) {
+                    config.tts.voices = window.speechSynthesis.getVoices();
+                    config.tts.voice = config.tts.voices[0];
+                  }
+                })
+              }
+            ></input>
+          </SettingItem>
+          {config.tts.enable ? (
+            <>
+              <SettingItem title={Locale.Settings.TTS.Voice}>
+                <select
+                  value={config.tts.voice?.name}
+                  onChange={(e) => {
+                    updateConfig(
+                      (config) =>
+                        (config.tts.voice = config.tts.voices.find(
+                          (v) => v.name === e.currentTarget.value,
+                        )),
+                    );
+                  }}
+                  style={{ maxWidth: "300px" }}
+                >
+                  {config.tts.voices.map((v) => (
+                    <option value={v.name} key={v.name}>
+                      {v.name}
+                    </option>
+                  ))}
+                </select>
+              </SettingItem>
+              <SettingItem title={Locale.Settings.TTS.AutoRead}>
+                <input
+                  type="checkbox"
+                  checked={config.tts.autoRead}
+                  onChange={(e) =>
+                    updateConfig(
+                      (config) =>
+                        (config.tts.autoRead = e.currentTarget.checked),
+                    )
+                  }
+                ></input>
+              </SettingItem>
+            </>
+          ) : (
+            <></>
+          )}
         </List>
         <List>
           <SettingItem
