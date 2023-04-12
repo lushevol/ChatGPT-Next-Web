@@ -98,6 +98,12 @@ const jp = {
     Theme: "テーマ",
     TightBorder: "ボーダーレスモード",
     SendPreviewBubble: "プレビューバブルの送信",
+    TTS: {
+      Title: "読み上げ",
+      SubTitle: "チャット内容を読み上げる",
+      Voice: "音声",
+      AutoRead: "自動読み上げ",
+    },
     Prompt: {
       Disable: {
         Title: "プロンプトの自動補完を無効にする",
