@@ -600,7 +600,7 @@ export const useChatStore = create<ChatStore>()(
     }),
     {
       name: LOCAL_KEY,
-      version: 1.2,
+      version: 1.3,
       migrate(persistedState, version) {
         const state = persistedState as ChatStore;
 
@@ -610,6 +610,14 @@ export const useChatStore = create<ChatStore>()(
 
         if (version < 1.2) {
           state.sessions.forEach((s) => (s.sendMemory = true));
+        }
+
+        if (version < 1.3) {
+          state.config.tts = {
+            enable: false,
+            voices: [],
+            autoRead: false,
+          };
         }
 
         return state;
