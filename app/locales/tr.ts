@@ -19,6 +19,8 @@ const tr: LocaleType = {
       Copy: "Kopyala",
       Stop: "Durdur",
       Retry: "Tekrar Dene",
+      Read: "Oku",
+      StopRead: "Okumayı Durdur",
     },
     Rename: "Sohbeti Yeniden Adlandır",
     Typing: "Yazıyor…",
@@ -96,6 +98,13 @@ const tr: LocaleType = {
     Theme: "Tema",
     TightBorder: "Tam Ekran",
     SendPreviewBubble: "Mesaj Önizleme Balonu",
+    TTS: {
+      Title: "Metin Okuma",
+      SubTitle:
+        "Sohbet mesajlarını okumak için metin okuma özelliğini etkinleştirin",
+      Voice: "Ses",
+      AutoRead: "Otomatik Okuma",
+    },
     Prompt: {
       Disable: {
         Title: "Otomatik tamamlamayı devre dışı bırak",

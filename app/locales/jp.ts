@@ -18,6 +18,8 @@ const jp = {
       Copy: "コピー",
       Stop: "停止",
       Retry: "リトライ",
+      Read: "読み上げ",
+      StopRead: "読み上げを停止",
     },
     Rename: "チャットの名前を変更",
     Typing: "入力中…",

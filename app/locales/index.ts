@@ -9,7 +9,7 @@ import JP from "./jp";
 export type { LocaleType } from "./cn";
 
 export const AllLangs = ["en", "cn", "tw", "es", "it", "tr", "jp"] as const;
-type Lang = (typeof AllLangs)[number];
+export type Lang = (typeof AllLangs)[number];
 
 const LANG_KEY = "lang";
 

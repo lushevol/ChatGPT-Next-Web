@@ -1,6 +1,6 @@
 import { EmojiStyle } from "emoji-picker-react";
 import { showToast } from "./components/ui-lib";
-import Locale from "./locales";
+import Locale, { getLang, Lang } from "./locales";
 
 export function trimTopic(topic: string) {
   return topic.replace(/[，。！？”“"、,.!?]*$/, "");
@@ -119,4 +119,14 @@ export function autoGrowTextArea(dom: HTMLTextAreaElement) {
   const rows = Math.round(height / singleLineHeight) + lineWrapCount;
 
   return rows;
+}
+
+export function filterVoiceByLanguage(voices: SpeechSynthesisVoice[]) {
+  let language: Lang | "zh" = getLang();
+  if (language === "cn") {
+    language = "zh";
+  }
+  return voices.filter(
+    (voice) => voice.lang.startsWith(language) && !voice.localService,
+  );
 }

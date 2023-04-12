@@ -19,6 +19,8 @@ const it: LocaleType = {
       Copy: "Copia",
       Stop: "Stop",
       Retry: "Riprova",
+      Read: "Leggi",
+      StopRead: "Stop Read",
     },
     Rename: "Rinomina Chat",
     Typing: "Typing…",
@@ -96,6 +98,12 @@ const it: LocaleType = {
     Theme: "tema",
     TightBorder: "Bordi stretti",
     SendPreviewBubble: "Invia l'anteprima della bolla",
+    TTS: {
+      Title: "TTS",
+      SubTitle: "Abilita la funzione di lettura vocale",
+      Voice: "Voce",
+      AutoRead: "Lettura automatica",
+    },
     Prompt: {
       Disable: {
         Title: "Disabilita l'auto completamento",

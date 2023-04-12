@@ -17,7 +17,7 @@ import LoadingIcon from "../icons/three-dots.svg";
 import CloseIcon from "../icons/close.svg";
 
 import { useChatStore } from "../store";
-import { isMobileScreen } from "../utils";
+import { filterVoiceByLanguage, isMobileScreen } from "../utils";
 import Locale from "../locales";
 import { Chat } from "./chat";
 
@@ -159,7 +159,14 @@ function _Home() {
   useEffect(() => {
     window.speechSynthesis.onvoiceschanged = () => {
       const voices = window.speechSynthesis.getVoices();
-      config.tts.voices = voices;
+      config.tts.voices = filterVoiceByLanguage(voices);
+      if (!config.tts.voice?.name) {
+        config.tts.voice = config.tts.voices[0];
+      } else {
+        config.tts.voice = config.tts.voices.find(
+          (v) => v.name === config.tts.voice?.name,
+        );
+      }
       updateConfig(() => ({ config }));
     };
   }, []);
