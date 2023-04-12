@@ -91,9 +91,20 @@ export function Home() {
 
   // setting
   const [openSettings, setOpenSettings] = useState(false);
-  const config = useChatStore((state) => state.config);
+  const [config, updateConfig] = useChatStore((state) => [
+    state.config,
+    state.updateConfig,
+  ]);
 
   useSwitchTheme();
+
+  useEffect(() => {
+    window.speechSynthesis.onvoiceschanged = () => {
+      const voices = window.speechSynthesis.getVoices();
+      config.tts.voices = voices;
+      updateConfig(() => ({ config }));
+    };
+  }, []);
 
   if (loading) {
     return <Loading />;

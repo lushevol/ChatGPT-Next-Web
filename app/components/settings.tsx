@@ -297,10 +297,6 @@ export function Settings(props: { closeSettings: () => void }) {
               onChange={(e) =>
                 updateConfig((config) => {
                   config.tts.enable = e.currentTarget.checked;
-                  if (config.tts.enable) {
-                    config.tts.voices = window.speechSynthesis.getVoices();
-                    config.tts.voice = config.tts.voices[0];
-                  }
                 })
               }
             ></input>

@@ -236,295 +236,284 @@ const LOCAL_KEY = "chat-next-web-store";
 
 export const useChatStore = create<ChatStore>()(
   persist(
-    (set, get) => {
-      window.speechSynthesis.onvoiceschanged = () => {
-        const voices = window.speechSynthesis.getVoices();
+    (set, get) => ({
+      sessions: [createEmptySession()],
+      currentSessionIndex: 0,
+      config: {
+        ...DEFAULT_CONFIG,
+      },
+
+      clearSessions() {
+        set(() => ({
+          sessions: [createEmptySession()],
+          currentSessionIndex: 0,
+        }));
+      },
+
+      resetConfig() {
+        set(() => ({ config: { ...DEFAULT_CONFIG } }));
+      },
+
+      getConfig() {
+        return get().config;
+      },
+
+      updateConfig(updater) {
         const config = get().config;
-        config.tts.voices = voices;
+        updater(config);
         set(() => ({ config }));
-      };
-      return {
-        sessions: [createEmptySession()],
-        currentSessionIndex: 0,
-        config: {
-          ...DEFAULT_CONFIG,
-        },
+      },
 
-        clearSessions() {
-          set(() => ({
-            sessions: [createEmptySession()],
-            currentSessionIndex: 0,
-          }));
-        },
+      selectSession(index: number) {
+        set({
+          currentSessionIndex: index,
+        });
+      },
 
-        resetConfig() {
-          set(() => ({ config: { ...DEFAULT_CONFIG } }));
-        },
+      removeSession(index: number) {
+        set((state) => {
+          let nextIndex = state.currentSessionIndex;
+          const sessions = state.sessions;
 
-        getConfig() {
-          return get().config;
-        },
-
-        updateConfig(updater) {
-          const config = get().config;
-          updater(config);
-          set(() => ({ config }));
-        },
-
-        selectSession(index: number) {
-          set({
-            currentSessionIndex: index,
-          });
-        },
-
-        removeSession(index: number) {
-          set((state) => {
-            let nextIndex = state.currentSessionIndex;
-            const sessions = state.sessions;
-
-            if (sessions.length === 1) {
-              return {
-                currentSessionIndex: 0,
-                sessions: [createEmptySession()],
-              };
-            }
-
-            sessions.splice(index, 1);
-
-            if (nextIndex === index) {
-              nextIndex -= 1;
-            }
-
+          if (sessions.length === 1) {
             return {
-              currentSessionIndex: nextIndex,
-              sessions,
+              currentSessionIndex: 0,
+              sessions: [createEmptySession()],
             };
-          });
-        },
-
-        newSession() {
-          set((state) => ({
-            currentSessionIndex: 0,
-            sessions: [createEmptySession()].concat(state.sessions),
-          }));
-        },
-
-        currentSession() {
-          let index = get().currentSessionIndex;
-          const sessions = get().sessions;
-
-          if (index < 0 || index >= sessions.length) {
-            index = Math.min(sessions.length - 1, Math.max(0, index));
-            set(() => ({ currentSessionIndex: index }));
           }
 
-          const session = sessions[index];
+          sessions.splice(index, 1);
 
-          return session;
-        },
-
-        onNewMessage(message) {
-          get().updateCurrentSession((session) => {
-            session.lastUpdate = new Date().toLocaleString();
-          });
-          get().updateStat(message);
-          get().summarizeSession();
-        },
-
-        async onUserInput(content) {
-          const userMessage: Message = {
-            role: "user",
-            content,
-            date: new Date().toLocaleString(),
-          };
-
-          const botMessage: Message = {
-            content: "",
-            role: "assistant",
-            date: new Date().toLocaleString(),
-            streaming: true,
-          };
-
-          // get recent messages
-          const recentMessages = get().getMessagesWithMemory();
-          const sendMessages = recentMessages.concat(userMessage);
-          const sessionIndex = get().currentSessionIndex;
-          const messageIndex = get().currentSession().messages.length + 1;
-
-          // save user's and bot's message
-          get().updateCurrentSession((session) => {
-            session.messages.push(userMessage);
-            session.messages.push(botMessage);
-          });
-
-          // make request
-          console.log("[User Input] ", sendMessages);
-          requestChatStream(sendMessages, {
-            onMessage(content, done) {
-              // stream response
-              if (done) {
-                botMessage.streaming = false;
-                botMessage.content = content;
-                get().onNewMessage(botMessage);
-                ControllerPool.remove(sessionIndex, messageIndex);
-              } else {
-                botMessage.content = content;
-                set(() => ({}));
-              }
-            },
-            onError(error) {
-              botMessage.content += "\n\n" + Locale.Store.Error;
-              botMessage.streaming = false;
-              set(() => ({}));
-              ControllerPool.remove(sessionIndex, messageIndex);
-            },
-            onController(controller) {
-              // collect controller for stop/retry
-              ControllerPool.addController(
-                sessionIndex,
-                messageIndex,
-                controller,
-              );
-            },
-            filterBot: !get().config.sendBotMessages,
-            modelConfig: get().config.modelConfig,
-          });
-        },
-
-        getMemoryPrompt() {
-          const session = get().currentSession();
+          if (nextIndex === index) {
+            nextIndex -= 1;
+          }
 
           return {
-            role: "system",
-            content: Locale.Store.Prompt.History(session.memoryPrompt),
-            date: "",
-          } as Message;
-        },
+            currentSessionIndex: nextIndex,
+            sessions,
+          };
+        });
+      },
 
-        getMessagesWithMemory() {
-          const session = get().currentSession();
-          const config = get().config;
-          const n = session.messages.length;
+      newSession() {
+        set((state) => ({
+          currentSessionIndex: 0,
+          sessions: [createEmptySession()].concat(state.sessions),
+        }));
+      },
 
-          const context = session.context.slice();
+      currentSession() {
+        let index = get().currentSessionIndex;
+        const sessions = get().sessions;
 
-          if (session.memoryPrompt && session.memoryPrompt.length > 0) {
-            const memoryPrompt = get().getMemoryPrompt();
-            context.push(memoryPrompt);
-          }
+        if (index < 0 || index >= sessions.length) {
+          index = Math.min(sessions.length - 1, Math.max(0, index));
+          set(() => ({ currentSessionIndex: index }));
+        }
 
-          const recentMessages = context.concat(
-            session.messages.slice(Math.max(0, n - config.historyMessageCount)),
-          );
+        const session = sessions[index];
 
-          return recentMessages;
-        },
+        return session;
+      },
 
-        updateMessage(
-          sessionIndex: number,
-          messageIndex: number,
-          updater: (message?: Message) => void,
+      onNewMessage(message) {
+        get().updateCurrentSession((session) => {
+          session.lastUpdate = new Date().toLocaleString();
+        });
+        get().updateStat(message);
+        get().summarizeSession();
+      },
+
+      async onUserInput(content) {
+        const userMessage: Message = {
+          role: "user",
+          content,
+          date: new Date().toLocaleString(),
+        };
+
+        const botMessage: Message = {
+          content: "",
+          role: "assistant",
+          date: new Date().toLocaleString(),
+          streaming: true,
+        };
+
+        // get recent messages
+        const recentMessages = get().getMessagesWithMemory();
+        const sendMessages = recentMessages.concat(userMessage);
+        const sessionIndex = get().currentSessionIndex;
+        const messageIndex = get().currentSession().messages.length + 1;
+
+        // save user's and bot's message
+        get().updateCurrentSession((session) => {
+          session.messages.push(userMessage);
+          session.messages.push(botMessage);
+        });
+
+        // make request
+        console.log("[User Input] ", sendMessages);
+        requestChatStream(sendMessages, {
+          onMessage(content, done) {
+            // stream response
+            if (done) {
+              botMessage.streaming = false;
+              botMessage.content = content;
+              get().onNewMessage(botMessage);
+              ControllerPool.remove(sessionIndex, messageIndex);
+            } else {
+              botMessage.content = content;
+              set(() => ({}));
+            }
+          },
+          onError(error) {
+            botMessage.content += "\n\n" + Locale.Store.Error;
+            botMessage.streaming = false;
+            set(() => ({}));
+            ControllerPool.remove(sessionIndex, messageIndex);
+          },
+          onController(controller) {
+            // collect controller for stop/retry
+            ControllerPool.addController(
+              sessionIndex,
+              messageIndex,
+              controller,
+            );
+          },
+          filterBot: !get().config.sendBotMessages,
+          modelConfig: get().config.modelConfig,
+        });
+      },
+
+      getMemoryPrompt() {
+        const session = get().currentSession();
+
+        return {
+          role: "system",
+          content: Locale.Store.Prompt.History(session.memoryPrompt),
+          date: "",
+        } as Message;
+      },
+
+      getMessagesWithMemory() {
+        const session = get().currentSession();
+        const config = get().config;
+        const n = session.messages.length;
+
+        const context = session.context.slice();
+
+        if (session.memoryPrompt && session.memoryPrompt.length > 0) {
+          const memoryPrompt = get().getMemoryPrompt();
+          context.push(memoryPrompt);
+        }
+
+        const recentMessages = context.concat(
+          session.messages.slice(Math.max(0, n - config.historyMessageCount)),
+        );
+
+        return recentMessages;
+      },
+
+      updateMessage(
+        sessionIndex: number,
+        messageIndex: number,
+        updater: (message?: Message) => void,
+      ) {
+        const sessions = get().sessions;
+        const session = sessions.at(sessionIndex);
+        const messages = session?.messages;
+        updater(messages?.at(messageIndex));
+        set(() => ({ sessions }));
+      },
+
+      summarizeSession() {
+        const session = get().currentSession();
+
+        // should summarize topic after chating more than 50 words
+        const SUMMARIZE_MIN_LEN = 50;
+        if (
+          session.topic === DEFAULT_TOPIC &&
+          countMessages(session.messages) >= SUMMARIZE_MIN_LEN
         ) {
-          const sessions = get().sessions;
-          const session = sessions.at(sessionIndex);
-          const messages = session?.messages;
-          updater(messages?.at(messageIndex));
-          set(() => ({ sessions }));
-        },
-
-        summarizeSession() {
-          const session = get().currentSession();
-
-          // should summarize topic after chating more than 50 words
-          const SUMMARIZE_MIN_LEN = 50;
-          if (
-            session.topic === DEFAULT_TOPIC &&
-            countMessages(session.messages) >= SUMMARIZE_MIN_LEN
-          ) {
-            requestWithPrompt(session.messages, Locale.Store.Prompt.Topic).then(
-              (res) => {
-                get().updateCurrentSession(
-                  (session) => (session.topic = trimTopic(res)),
-                );
-              },
-            );
-          }
-
-          const config = get().config;
-          let toBeSummarizedMsgs = session.messages.slice(
-            session.lastSummarizeIndex,
+          requestWithPrompt(session.messages, Locale.Store.Prompt.Topic).then(
+            (res) => {
+              get().updateCurrentSession(
+                (session) => (session.topic = trimTopic(res)),
+              );
+            },
           );
+        }
 
-          const historyMsgLength = countMessages(toBeSummarizedMsgs);
+        const config = get().config;
+        let toBeSummarizedMsgs = session.messages.slice(
+          session.lastSummarizeIndex,
+        );
 
-          if (
-            historyMsgLength > get().config?.modelConfig?.max_tokens ??
-            4000
-          ) {
-            const n = toBeSummarizedMsgs.length;
-            toBeSummarizedMsgs = toBeSummarizedMsgs.slice(
-              Math.max(0, n - config.historyMessageCount),
-            );
-          }
+        const historyMsgLength = countMessages(toBeSummarizedMsgs);
 
-          // add memory prompt
-          toBeSummarizedMsgs.unshift(get().getMemoryPrompt());
-
-          const lastSummarizeIndex = session.messages.length;
-
-          console.log(
-            "[Chat History] ",
-            toBeSummarizedMsgs,
-            historyMsgLength,
-            config.compressMessageLengthThreshold,
+        if (historyMsgLength > get().config?.modelConfig?.max_tokens ?? 4000) {
+          const n = toBeSummarizedMsgs.length;
+          toBeSummarizedMsgs = toBeSummarizedMsgs.slice(
+            Math.max(0, n - config.historyMessageCount),
           );
+        }
 
-          if (historyMsgLength > config.compressMessageLengthThreshold) {
-            requestChatStream(
-              toBeSummarizedMsgs.concat({
-                role: "system",
-                content: Locale.Store.Prompt.Summarize,
-                date: "",
-              }),
-              {
-                filterBot: false,
-                onMessage(message, done) {
-                  session.memoryPrompt = message;
-                  if (done) {
-                    console.log("[Memory] ", session.memoryPrompt);
-                    session.lastSummarizeIndex = lastSummarizeIndex;
-                  }
-                },
-                onError(error) {
-                  console.error("[Summarize] ", error);
-                },
+        // add memory prompt
+        toBeSummarizedMsgs.unshift(get().getMemoryPrompt());
+
+        const lastSummarizeIndex = session.messages.length;
+
+        console.log(
+          "[Chat History] ",
+          toBeSummarizedMsgs,
+          historyMsgLength,
+          config.compressMessageLengthThreshold,
+        );
+
+        if (historyMsgLength > config.compressMessageLengthThreshold) {
+          requestChatStream(
+            toBeSummarizedMsgs.concat({
+              role: "system",
+              content: Locale.Store.Prompt.Summarize,
+              date: "",
+            }),
+            {
+              filterBot: false,
+              onMessage(message, done) {
+                session.memoryPrompt = message;
+                if (done) {
+                  console.log("[Memory] ", session.memoryPrompt);
+                  session.lastSummarizeIndex = lastSummarizeIndex;
+                }
               },
-            );
-          }
-        },
+              onError(error) {
+                console.error("[Summarize] ", error);
+              },
+            },
+          );
+        }
+      },
 
-        updateStat(message) {
-          get().updateCurrentSession((session) => {
-            session.stat.charCount += message.content.length;
-            // TODO: should update chat count and word count
-          });
-        },
+      updateStat(message) {
+        get().updateCurrentSession((session) => {
+          session.stat.charCount += message.content.length;
+          // TODO: should update chat count and word count
+        });
+      },
 
-        updateCurrentSession(updater) {
-          const sessions = get().sessions;
-          const index = get().currentSessionIndex;
-          updater(sessions[index]);
-          set(() => ({ sessions }));
-        },
+      updateCurrentSession(updater) {
+        const sessions = get().sessions;
+        const index = get().currentSessionIndex;
+        updater(sessions[index]);
+        set(() => ({ sessions }));
+      },
 
-        clearAllData() {
-          if (confirm(Locale.Store.ConfirmClearAll)) {
-            localStorage.clear();
-            location.reload();
-          }
-        },
-      };
-    },
+      clearAllData() {
+        if (confirm(Locale.Store.ConfirmClearAll)) {
+          localStorage.clear();
+          location.reload();
+        }
+      },
+    }),
     {
       name: LOCAL_KEY,
       version: 1.1,
